@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "node dist/expressIndex.js",
-    "dev": "tsx watch src/expressIndex.ts",
+    "dev": "DEBUG=express:* tsx watch src/expressIndex.ts",
     "typecheck": "tsc --watch --noEmit",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -25,6 +25,8 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "form-data": "^4.0.3",
+    "loglevel": "^1.9.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

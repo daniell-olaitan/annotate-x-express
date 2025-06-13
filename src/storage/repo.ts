@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { InternalServalError, NotFound } from "../express_app/core/errorHandlers";
+import { InternalServalError, NotFound } from "../express_app/core/httpErrors";
 import { User, Project, Annotation, Demo, Category, Image } from "@prisma/client";
 import { IUserProps, IAnnotationProps, ICategoryProps, IImageProps, IProjectProps } from "../app/models";
 
@@ -37,12 +37,14 @@ interface IProject extends IRepo<IProjectProps, Project, ProjectInput> {
 type CategoryInput = ICategoryProps & { projectId: string };
 
 interface ICategory extends IBase<ICategoryProps, Category, CategoryInput> {
+  createMany(data: CategoryInput[]): Promise<Category[]>;
   getByName(name: string): Promise<Category>;
 }
 
 type ImageInput = IImageProps & { projectId: string };
 
 interface IImage extends IRepo<IImageProps, Image, ImageInput> {
+  createMany(data: ImageInput[]): Promise<Image[]>;
   getProjectImages(projectId: string): Promise<Image[]>;
 }
 
@@ -100,7 +102,7 @@ export class UserRepo extends Repo<IUserProps, User> implements IUser {
       });
     } catch (err) {
       console.error(err);
-      throw new NotFound('user not found');
+      throw new NotFound('User does not exist');
     }
   }
 
@@ -178,6 +180,15 @@ export class ImageRepo extends Repo<IImageProps, Image, ImageInput> implements I
     super(prisma);
   }
 
+  async createMany(data: ImageInput[]): Promise<Image[]> {
+    try {
+      return await this.prisma.image.createMany({ data });
+    } catch (err) {
+      console.error(err);
+      throw new InternalServalError("something went wrong");
+    }
+  }
+
   async getProjectImages(projectId: string): Promise<Image[]> {
     try {
       return await this.prisma.image.findMany({
@@ -216,6 +227,15 @@ export class CategoryRepo extends BaseRepo<ICategoryProps, Category, CategoryInp
 
   constructor(prisma: PrismaClient | Prisma.TransactionClient) {
     super(prisma);
+  }
+
+  async createMany(data: CategoryInput[]): Promise<Category[]> {
+    try {
+      return await this.prisma.category.createMany({ data });
+    } catch (err) {
+      console.error(err);
+      throw new InternalServalError("something went wrong");
+    }
   }
 
   async getByName(name: string): Promise<Category> {
