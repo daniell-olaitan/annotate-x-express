@@ -1,0 +1,9 @@
+<div id="project"></div>
+
+<% if (projectId) { %>
+  <script>window.config = {username: "<%= username %>", projectId: "<%= projectId %>"}</script>
+<% } else { %>
+  <script>window.config = {username: "<%= username %>"}</script>
+<% } %>
+
+<script type="module" src="/src/js/pages/Home.js"></script>
