@@ -2,9 +2,13 @@
   "name": "express_app",
   "version": "1.0.0",
   "main": "index.js",
+  "prisma": {
+    "schema": "src/storage/orm/schema.prisma"
+  },
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "nodemon",
+    "start": "node dist/expressIndex.js",
+    "dev": "tsx watch src/expressIndex.ts",
+    "typecheck": "tsc --watch --noEmit",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,13 +17,27 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "@prisma/client": "^6.8.2",
+    "axios": "^1.9.0",
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^2.6.1",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.2",
+    "@types/express-session": "^1.18.1",
     "@types/node": "^22.15.24",
+    "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.10",
+    "npm-run-all": "^4.1.5",
+    "prisma": "^6.8.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

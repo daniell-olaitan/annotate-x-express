@@ -1,0 +1,83 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["relationJoins"]
+}
+
+model Annotation {
+    id         String   @id
+    createdAt  DateTime @default(now())
+    imageId    String
+    categoryId String
+    x          Float
+    y          Float
+    height     Float
+    width      Float
+
+    image    Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@map("annotations")
+}
+
+model Demo {
+    id        String   @id
+    createdAt DateTime @default(now())
+    url       String
+
+    @@map("demo")
+}
+
+model Image {
+    id        String   @id
+    createdAt DateTime @default(now())
+    projectId String
+    url       String
+    filename  String
+    width     Float
+    height    Float
+
+    project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    annotations Annotation[]
+
+    @@map("images")
+}
+
+model Category {
+    id        String   @id
+    createdAt DateTime @default(now())
+    projectId String
+    name      String
+    color     String
+
+    project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    annotations Annotation[]
+
+    @@map("categories")
+}
+
+model Project {
+    id        String   @id
+    createdAt DateTime @default(now())
+    name      String   @unique
+    userId    String
+
+    user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+    categories Category[]
+    images     Image[]
+
+    @@map("projects")
+}
+
+model User {
+    id        String   @id
+    createdAt DateTime @default(now())
+    username  String   @unique
+    password  String
+
+    projects Project[]
+}

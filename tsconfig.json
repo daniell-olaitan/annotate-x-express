@@ -1,13 +1,19 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "CommonJS",
     "strict": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "traceResolution": true,
+    "typeRoots": [
+      "./types",
+      "./node_modules/@types"
+    ]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
