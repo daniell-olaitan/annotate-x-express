@@ -1,4 +1,3 @@
-import cloudinary from 'cloudinary';
 import { v2 as cloudinaryV2 } from 'cloudinary';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import FormData from 'form-data';
@@ -129,8 +128,13 @@ export class ImageUtil {
       axiosInstance: AxiosInstance,
       url: string
     ): Promise<AxiosResponse> => {
-      const response = await axiosInstance.get(url, { responseType: 'arraybuffer' });
-      return response;
+      try {
+        const response = await axiosInstance.get(url, { responseType: 'arraybuffer' });
+        return response;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
     };
 
     let attempt = 0;
@@ -196,6 +200,7 @@ export class ImageUtil {
 
         cloudinaryV2.api.delete_resources_by_prefix(`${folder}/`, {}, (error, result) => {
           if (error) throw error;
+          console.log(error);
           if ('deleted' in result) {
             log.info('Images deleted successfully');
           } else {

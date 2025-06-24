@@ -124,17 +124,18 @@ export class ProjectRepo extends Repo<IProjectProps, Project, ProjectInput> impl
   }
 
   async getByName(name: string): Promise<Project> {
+    console.log(name);
     try {
       return await this.prisma.project.findUniqueOrThrow({
         where: { name: name }
       });
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       throw new NotFound('project not found');
     }
   }
 
-  async getWithRelationships(id: string): Promise<Project> {
+  async getWithRelationships(id: string): Promise<any> {
     try {
       return await this.prisma.project.findUniqueOrThrow({
         where: { id: id },
@@ -182,7 +183,9 @@ export class ImageRepo extends Repo<IImageProps, Image, ImageInput> implements I
 
   async createMany(data: ImageInput[]): Promise<Image[]> {
     try {
-      return await this.prisma.image.createMany({ data });
+      return await Promise.all(
+        data.map(image => this.prisma.image.create({ data: image }))
+      );
     } catch (err) {
       console.error(err);
       throw new InternalServalError("something went wrong");
@@ -231,7 +234,9 @@ export class CategoryRepo extends BaseRepo<ICategoryProps, Category, CategoryInp
 
   async createMany(data: CategoryInput[]): Promise<Category[]> {
     try {
-      return await this.prisma.category.createMany({ data });
+      return await Promise.all(
+        data.map(category => this.prisma.category.create({ data: category }))
+      );
     } catch (err) {
       console.error(err);
       throw new InternalServalError("something went wrong");

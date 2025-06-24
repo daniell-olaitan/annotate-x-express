@@ -1,320 +1,252 @@
-import { User } from "../app/models";
+import { IProjectProps, IImageProps, User, Project, Category, Image, ICategoryProps, Annotation, IAnnotationProps } from "../app/models";
+import { BadRequest, InternalServalError, NotFound } from "../express_app/core/httpErrors";
+import { v4 as uuid4 } from 'uuid';
+import { generateUniqueName, ImageUtil } from "../utils";
+import { z } from "zod";
+import { AnnotationsPayloadSchema } from "../express_app/core/validationSchemas";
+import archiver from 'archiver';
+import { PassThrough } from 'stream';
+import { AxiosResponse } from 'axios';
 import { uow } from "../storage/uow";
 
-
-// // Implementations of the Model Repositories
-// export class UserRepo implements IUser {
-//   constructor(private prisma: PrismaClient | Prisma.TransactionClient) { }
-
-//   async create(data: Prisma.UserCreateInput): Promise<User> {
-//     const saltRounds = 10;
-//     data.password = await bcrypt.hash(data.password, saltRounds);
-
-//     const user = await this.prisma.user.create({
-//       data: data
-//     })
-
-//     return user.id;
-//   }
-
-//   async get(username: string): Promise<User | null> {
-//     const user = await this.prisma.user.findUnique({
-//       where: { username: username }
-//     });
-
-//     if (user) {
-//       return new User(user.username, user.password, user.id);
-//     } else {
-//       return user;
-//     }
-//   }
-
-//   async getById(id: string): Promise<User | null> {
-//     const user = await this.prisma.user.findUnique({
-//       where: { id: id }
-//     });
-
-//     if (user) {
-//       return new User(user.username, user.password, user.id);
-//     } else {
-//       return user;
-//     }
-//   }
-
-//   async remove(id: string): Promise<void> {
-//     const user = await this.prisma.user.delete({
-//       where: { id: id }
-//     });
-//   }
-
-//   async getUsernames(): Promise<string[]> {
-//     const users = await this.prisma.user.findMany({
-//       select: { username: true }
-//     });
-
-//     return users.map(user => user.username);
-//   }
-// }
-
-// export class ProjectRepo implements IProject {
-//   constructor(private prisma: PrismaClient | Prisma.TransactionClient) { }
-
-//   async create(data: Prisma.ProjectCreateInput): Promise<string> {
-//     const project = await this.prisma.project.create({
-//       data: data
-//     });
-
-//     return project.id;
-//   }
-
-//   async get(name: string): Promise<Project | null> {
-//     const project = await this.prisma.project.findUnique({
-//       where: { name: name }
-//     });
-
-//     if (project) {
-//       return new Project(project.name, project.id);
-//     } else {
-//       return project;
-//     }
-//   }
-
-//   async getById(id: string): Promise<Project | null> {
-//     const project = await this.prisma.project.findUnique({
-//       where: { id: id }
-//     });
-
-//     if (project) {
-//       return new Project(project.name, project.id);
-//     } else {
-//       return project;
-//     }
-//   }
-
-//   async getWithRelationships(id: string): Promise<Project | {}> {
-//     const project = await this.prisma.project.findUnique({
-//       where: { id: id },
-//       include: {
-//         categories: true,
-//         images: {
-//           include: {
-//             annotations: {
-//               include: {
-//                 category: true
-//               }
-//             }
-//           }
-//         }
-//       }
-//     });
-
-//     if (project) {
-//       const proj = new Project(project.name, project.id);
-//       const categories = project.categories.map(c => new Category(c.name, c.color, c.id));
-//       const images = project.images.map(img => {
-//         const image = new Image(img.url, img.width, img.height, img.filename, img.id);
-
-//         const annotations = img.annotations.map(a => {
-//           const annotation = new Annotation(a.x, a.y, a.height, a.width, a.id);
-
-//           annotation.category = new Category(a.category.name, a.category.color, a.category.id);
-//           return annotation;
-//         });
-
-//         image.annotations = annotations;
-//         return image;
-//       });
-
-//       proj.images = images;
-//       proj.categories = categories;
-
-//       return proj;
-//     } else {
-//       return {};
-//     }
-//   }
-
-//   async list(userId?: string): Promise<Project[]> {
-//     let project;
-
-//     if (userId) {
-//       project = await this.prisma.project.findMany({
-//         where: { userId: userId }
-//       });
-//     } else {
-//       project = await this.prisma.project.findMany();
-//     }
-
-//     return project.map(proj => new Project(proj.name, proj.id));
-//   }
-
-//   async remove(id: string): Promise<void> {
-//     const _ = await this.prisma.project.delete({
-//       where: { id: id }
-//     });
-//   }
-
-//   async exportProjectData(id: string): Promise<Record<string, any> | {}> {
-//     const project = await this.prisma.project.findUnique({
-//       where: { id: id },
-//       include: {
-//         categories: true,
-//         images: {
-//           include: {
-//             annotations: {
-//               include: {
-//                 category: true
-//               }
-//             }
-//           }
-//         }
-//       }
-//     });
-
-//     if (project) {
-//       const imageUrls: string[] = [];
-//       const annotations: Record<string, any>[] = [];
-
-//       const categories = project.categories.map(c => ({ id: c.id, name: c.name }));
-//       const images = project.images.map(img => {
-//         const { url, ...image } = img;
-//         img.annotations.forEach(a => {
-//           annotations.push({
-//             id: a.id,
-//             imageId: a.imageId,
-//             categoryId: a.categoryId,
-//             iscrowd: 0,
-//             area: a.width * a.height,
-//             bbox: [a.x, a.y, a.height, a.width]
-//           });
-//         });
-
-//         imageUrls.push(url);
-//         return image;
-//       });
-
-//       return {
-//         name: project.name.toLocaleLowerCase(),
-//         images,
-//         imageUrls,
-//         categories,
-//         annotations
-//       };
-//     } else {
-//       return {};
-//     }
-//   }
-// }
-
-// export class ImageRepo implements IImage {
-//   constructor(private prisma: PrismaClient | Prisma.TransactionClient) { }
-
-//   async create(data: Prisma.ImageCreateInput): Promise<string> {
-//     const image = await this.prisma.image.create({
-//       data: data
-//     });
-
-//     return image.id;
-//   }
-
-//   async getById(id: string): Promise<Image | null> {
-//     const image = await this.prisma.image.findUnique({
-//       where: {
-//         id: id
-//       }
-//     });
-
-//     if (image) {
-//       return new Image(image.url, image.width, image.height, image.filename, image.id);
-//     } else {
-//       return image;
-//     }
-//   }
-
-//   async getProjectImageNames(projectId: string): Promise<string[]> {
-//     const images = await this.prisma.image.findMany({
-//       where: { projectId: projectId }
-//     });
-
-//     return images.map(img => path.parse(img.url).name);
-//   }
-
-//   async remove(id: string): Promise<void> {
-//     const _ = await this.prisma.image.delete({
-//       where: {
-//         id: id
-//       }
-//     });
-//   }
-// }
-
-// export class AnnotationRepo implements IAnnotation {
-//   constructor(private prisma: PrismaClient | Prisma.TransactionClient) { }
-
-//   async create(data: Prisma.AnnotationCreateInput): Promise<string> {
-//     const annotation = await this.prisma.annotation.create({
-//       data: data
-//     });
-
-//     return annotation.id;
-//   }
-
-//   async removeImageAnnotations(imageId: string): Promise<void> {
-//     const _ = await this.prisma.annotation.deleteMany({
-//       where: {
-//         imageId: imageId
-//       }
-//     });
-//   }
-// }
-
-// export class CategoryRepo implements ICategory {
-//   constructor(private prisma: PrismaClient | Prisma.TransactionClient) { }
-
-//   async create(data: Prisma.CategoryCreateInput): Promise<string> {
-//     const category = await this.prisma.category.create({
-//       data: data
-//     });
-
-//     return category.id;
-//   }
-
-//   async get(name: string): Promise<Category | null> {
-//     const category = await this.prisma.category.findFirst({
-//       where: {
-//         name: name
-//       }
-//     });
-
-//     if (category) {
-//       return new Category(category.name, category.color, category.id);
-//     } else {
-//       return category;
-//     }
-//   }
-// }
-
-// export class DemoRepo implements IDemo {
-//   constructor(private prisma: PrismaClient | Prisma.TransactionClient) { }
-
-//   async getImageUrls(): Promise<string[]> {
-//     const demos = await this.prisma.demo.findMany();
-
-//     return demos.map(demo => demo.url);
-//   }
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-export class AppServices {
+const imageUtil = new ImageUtil();
+
+interface ProjectCreateData {
+  name: string;
+  categories: [string, string][];
+  files: Buffer[];
+}
+
+export default class AppServices {
   private static uow = uow;
+
+  static async confirmProject(id: string): Promise<boolean> {
+    try {
+      await this.uow.projectRepo.getById(id);
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  static async createNewProject(
+    userId: string,
+    data: ProjectCreateData
+  ): Promise<IProjectProps> {
+    const projectName = data.name.toUpperCase();
+
+    try {
+      await this.uow.projectRepo.getByName(projectName);
+      throw new BadRequest('Project name already exist');
+    } catch (error) {
+      if (!(error instanceof NotFound)) throw error;
+    }
+
+    // Prepare image names & buffers
+    const files: [string, Buffer][] = [];
+    const imageNames: string[] = [];
+
+    data.files.forEach(img => {
+      const imageName = generateUniqueName(imageNames, 'image');
+
+      imageNames.push(imageName);
+      files.push([imageName, img]);
+    });
+
+    // Upload images
+    let uploadedImages;
+    try {
+      uploadedImages = await imageUtil.uploadImages(files, `EXPRESS/${projectName}`);
+    } catch (error) {
+      throw new InternalServalError('Network Error');
+    }
+
+    return this.uow.runInTransaction(async ({
+      projectRepo, categoryRepo, imageRepo
+    }) => {
+      // Create and save new project
+      const project = new Project(projectName, uuid4());
+      const projectData = await projectRepo!.create({ ...project, userId });
+
+      // Create and save new categories for the project
+      const categories = data.categories.map(c => new Category(c[0], c[1], uuid4()));
+      await categoryRepo!.createMany(
+        categories.map(c => ({ ...c, projectId: project.id }))
+      );
+
+      // Save uploaded images
+      const images = uploadedImages.map(
+        img => new Image(img.url, img.width, img.height, img.filename, uuid4())
+      );
+
+      await imageRepo!.createMany(
+        images.map(img => ({ ...img, projectId: project.id }))
+      );
+
+      return projectData;
+    });
+  }
+
+  static async getProject(id: string): Promise<any> {
+    return await this.uow.projectRepo.getWithRelationships(id);
+  }
+
+  static async getUserProjects(userId: string): Promise<IProjectProps[]> {
+    return await this.uow.projectRepo.list(userId);
+  }
+
+  static async deleteProject(id: string): Promise<void> {
+    await this.uow.projectRepo.remove(id);
+  }
+
+  static async createNewAnnotations(
+    pId: string,
+    iId: string,
+    data: z.infer<typeof AnnotationsPayloadSchema>
+  ): Promise<void> {
+    // Validate ids
+    await this.uow.imageRepo.getById(iId);
+    await this.uow.projectRepo.getById(pId);
+
+    return this.uow.runInTransaction(async ({
+      annotationRepo, categoryRepo
+    }) => {
+      // Remove the existing annotations to be replaced with newly created ones
+      await annotationRepo!.removeImageAnnotations(iId);
+
+      //Create new annotations and categories
+      await Promise.all(data.map(async (annotation) => {
+        const annotatn = new Annotation(
+          annotation.x,
+          annotation.y,
+          annotation.height,
+          annotation.width,
+          uuid4()
+        );
+
+        let categoryId;
+        try {
+          const categoryData = await categoryRepo!.getByName(annotation.category.name);
+          categoryId = categoryData.id;
+        } catch (_error) {
+          const category = new Category(
+            annotation.category.name,
+            annotation.category.color,
+            uuid4()
+          );
+
+          const categoryData = await categoryRepo!.create({ ...category, projectId: pId });
+          categoryId = categoryData.id;
+        }
+
+        await annotationRepo!.create({ ...annotatn, imageId: iId, categoryId });
+      }));
+    });
+  }
+
+  static async addImagesToAProject(projectId: string, imageFiles: Buffer[]): Promise<any> {
+    const project = await this.uow.projectRepo.getById(projectId);
+
+    // Upload and save images
+    const files: [string, Buffer][] = [];
+    const projectImages = await this.uow.imageRepo.getProjectImages(projectId);
+    const imageNames = projectImages.map(img => img.filename);
+
+    imageFiles.forEach(img => {
+      const imageName = generateUniqueName(imageNames, 'image');
+
+      imageNames.push(imageName);
+      files.push([imageName, img]);
+    });
+
+    let uploadedImages;
+    try {
+      uploadedImages = await imageUtil.uploadImages(files, `EXPRESS/${project.name}`);
+    } catch (error) {
+      throw new InternalServalError('Network Error');
+    }
+
+    const images = uploadedImages.map(
+      img => new Image(img.url, img.width, img.height, img.filename, uuid4())
+    );
+
+    const imagesData = await this.uow.imageRepo.createMany(
+      images.map(img => ({ ...img, projectId: project.id }))
+    );
+
+    return imagesData.map(imageData => ({ ...imageData, annotations: [] }));
+  }
+
+  static async deleteImage(imageId: string): Promise<void> {
+    const img = await this.uow.imageRepo.getById(imageId);
+
+    try {
+      const image = new Image(img.url, img.width, img.height, img.filename, uuid4());
+
+      await imageUtil.deleteImage(image);
+    } catch (error) {
+      throw new InternalServalError('Network Error');
+    }
+
+    await this.uow.imageRepo.remove(imageId);
+  }
+
+  static async zipProject(projectId: string): Promise<[string, PassThrough]> {
+    const project = await this.uow.projectRepo.getWithRelationships(projectId);
+    const projectName = project.name.toLowerCase();
+
+    const imageUrls: string[] = [];
+    const annotations: Record<string, any>[] = [];
+
+    const categories = project.categories.map((c: ICategoryProps) => ({ id: c.id, name: c.name }));
+    const images = project.images.map((img: any) => {
+      const { id, url, width, height, filename, ..._ } = img;
+      img.annotations.forEach((a: any) => {
+        annotations.push({
+          id: a.id,
+          imageId: a.imageId,
+          categoryId: a.categoryId,
+          iscrowd: 0,
+          area: a.width * a.height,
+          bbox: [a.x, a.y, a.height, a.width]
+        });
+      });
+
+      imageUrls.push(url);
+      return { id, width, height, filename };
+    });
+
+    let responses: AxiosResponse[];
+    try {
+      responses = await imageUtil.fetchImages(imageUrls);
+    } catch (error) {
+      throw new InternalServalError('Network Error');
+    }
+
+    const zipStream = new PassThrough();
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.pipe(zipStream);
+
+    // Add images
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i];
+      const response = responses[i];
+      archive.append(response.data, { name: `images/${img.filename}` });
+    }
+
+    // Add project metadata
+    const projectStr = JSON.stringify({
+      images,
+      categories,
+      annotations
+    }, null, 2);
+
+    archive.append(projectStr, { name: 'annotations.json' });
+
+    // Finalize the archive
+    archive.finalize();
+
+    return [projectName, zipStream];
+  }
 }

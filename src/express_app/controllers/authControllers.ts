@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { AuthServices } from '../../services/authServices';
-import { BadRequest, InternalServalError } from '../core/httpErrors';
+import AuthServices from '../../services/authServices';
+import { BadRequest } from '../core/httpErrors';
 
 class AuthController {
   static async demoSignin(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -36,7 +36,7 @@ class AuthController {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      next(new BadRequest('Username and passwords are required'));
+      return next(new BadRequest('Username and passwords are required'));
     }
 
     try {

@@ -57,7 +57,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
             error = new Error(`${data.message}`);
           }
 
-            throw error;
+          throw error;
         } else {
           data = await res.json();
 
@@ -98,7 +98,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
 
   const handleClear = (e) => {
     if (image) {
-      setAnnotations({...annotations, [image.id]: []});
+      setAnnotations({ ...annotations, [image.id]: [] });
     }
   };
 
@@ -134,7 +134,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
     const prevImage = index - 1;
 
     if (prevImage === -1) {
-      setImage(images[images.length-1]);
+      setImage(images[images.length - 1]);
     } else {
       setImage(images[prevImage]);
     }
@@ -168,7 +168,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
     const x = e.clientX;
     const y = e.clientY;
 
-    setProjectPopupPos({x, y});
+    setProjectPopupPos({ x, y });
   };
 
   const handleProjectOptionSelect = (option, e) => {
@@ -181,7 +181,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
         setFormClasses('');
         setFormProjectName('');
 
-        setPopupPosNew({x, y});
+        setPopupPosNew({ x, y });
       } else if (option.id === 'open') {
         projectList.current = [];
         projectListTitle.current = 'no projects';
@@ -204,7 +204,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                 error = new Error(`${data.message}`);
               }
 
-                throw error;
+              throw error;
             } else {
               data = await res.json();
 
@@ -212,12 +212,12 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
               if (projs.length > 0) {
                 projectListTitle.current = 'Your Projects';
                 projs.forEach(proj => {
-                  projectList.current.push({id: proj.name, value: proj});
+                  projectList.current.push({ id: proj.name, value: proj });
                 });
               }
             }
 
-            setPopupPos({x, y});
+            setPopupPos({ x, y });
           } catch (err) {
             setError(err.message);
             setTimeout(() => setError(''), 3000);
@@ -229,7 +229,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
         fetchProjects();
       } else if (option.id === 'images') {
         if (projectId) {
-          setPopupPosAddImage({x, y});
+          setPopupPosAddImage({ x, y });
         }
       } else if (option.id === 'export') {
         const exportProject = async () => {
@@ -248,7 +248,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                 error = new Error(`${data.message}`);
               }
 
-                throw error;
+              throw error;
             } else {
               const blob = await res.blob()
               const url = window.URL.createObjectURL(blob);
@@ -293,7 +293,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
 
     setSubPopupTitle(proj.name);
     setProjectToBeDeleted(proj);
-    setSubPopupPos({x, y});
+    setSubPopupPos({ x, y });
   };
 
   const handleDeleteProject = (proj, e) => {
@@ -317,7 +317,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
               error = new Error(`${data.message}`);
             }
 
-              throw error;
+            throw error;
           } else {
             if (proj.id === projectId) {
               window.location.href = '/';
@@ -372,7 +372,6 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
         });
 
         if (!res.ok) {
-          console.log(await res.json());
           let error = new Error('Failed to create project');
 
           if (res.status === 401) {
@@ -383,7 +382,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
             error = new Error(`${data.message}`);
           }
 
-            throw error;
+          throw error;
         } else {
           data = await res.json();
           window.location.href = `/project/${data.data.id}`;
@@ -438,7 +437,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
             error = new Error(`${data.message}`);
           }
 
-            throw error;
+          throw error;
         } else {
           data = await res.json();
           setImages(prev => [...prev, ...data.data]);
@@ -471,23 +470,23 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
           />
 
           ${projectPopupPos &&
-            html`
+    html`
               <${Popup}
                 labels=${[
-                  {id: 'New', value: {id: 'new'}},
-                  {id: 'Open', value: {id: 'open'}},
-                  {id: 'Add Images', value: {id: 'images'}},
-                  {id: 'Export', value: {id: 'export'}}
-                ]}
+        { id: 'New', value: { id: 'new' } },
+        { id: 'Open', value: { id: 'open' } },
+        { id: 'Add Images', value: { id: 'images' } },
+        { id: 'Export', value: { id: 'export' } }
+      ]}
                 popupPos=${projectPopupPos}
                 onSelect=${handleProjectOptionSelect}
                 title="Project Options"
               />
             `
-          }
+    }
 
           ${popupPosNew &&
-            html`
+    html`
               <${Form}
                 title="Create a Project"
                 classes=${formClasses}
@@ -501,10 +500,10 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                 setImages=${setFormImages}
               />
             `
-          }
+    }
 
           ${popupPos &&
-            html`
+    html`
               <${Popup}
                 labels=${projectList.current}
                 popupPos=${popupPos}
@@ -513,22 +512,22 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                 onContextMenu=${onDeleteContextMenu}
               />
             `
-          }
+    }
 
           ${subPopupPos &&
-            html`
+    html`
               <${Popup}
-                labels=${[{id: 'delete', value: projectToBeDeleted}]}
+                labels=${[{ id: 'delete', value: projectToBeDeleted }]}
                 popupPos=${subPopupPos}
                 onSelect=${handleDeleteProject}
                 title=${subPopupTitle}
                 onContextMenu=${onDeleteContextMenu}
               />
             `
-          }
+    }
 
           ${popupPosAddImage &&
-            html`
+    html`
               <${Form}
                 title="Add Images"
                 popupPos=${popupPosAddImage}
@@ -539,7 +538,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                 setImages=${setFormImages}
               />
             `
-          }
+    }
         </div>
 
         <${ImageList}
@@ -563,13 +562,13 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
       </div>
 
       ${!project
-          ? html`<p class="py-16 px-32 h2-c font-semibold">open or create a project</p>`
-          : html`
+      ? html`<p class="py-16 px-32 h2-c font-semibold">open or create a project</p>`
+      : html`
               <div class="flex flex-col gap-4 px-12 w-4/5">
                 <div class="flex">
                   <p class="h2-c mr-auto">${project.name}</p>
                   ${image
-                    ? html`
+          ? html`
                       <div class="flex ml-6 gap-12">
                         <${Button}
                         text="finish"
@@ -600,8 +599,8 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                         </div>
                       </div>
                       `
-                    : null
-                  }
+          : null
+        }
                 </div>
                 <div class="flex-grow">
                   <${Annotator}
@@ -614,7 +613,7 @@ export function AnnotationBoard({ projectId, setError, setLoading, setSaving }) 
                 </div>
               </div>
             `
-       }
+    }
     </main>
   `;
 }

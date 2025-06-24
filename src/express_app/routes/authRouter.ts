@@ -6,9 +6,9 @@ const authRouter = Router();
 
 authRouter.get('/demo-signin', AuthController.demoSignin);
 authRouter.get('/signin', redirectLoggedInUser, AuthController.signin);
-authRouter.post('/signin', express.json(), redirectLoggedInUser, AuthController.postSignin);
+authRouter.post('/signin', redirectLoggedInUser, express.json(), AuthController.postSignin);
 authRouter.get('/signup', redirectLoggedInUser, AuthController.signup);
-authRouter.post('/signup', express.json(), redirectLoggedInUser, AuthController.postSignup);
+authRouter.post('/signup', redirectLoggedInUser, express.json(), AuthController.postSignup);
 authRouter.get('/signout', requireLogin, AuthController.signout);
 
 export default authRouter;

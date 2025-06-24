@@ -36,24 +36,6 @@ export interface ICategoryProps extends IBaseModelProps {
 
 abstract class BaseModel implements IBaseModelProps {
   constructor(public id: string) { }
-
-  toDict(): Record<string, any> {
-    const modelDict = JSON.parse(JSON.stringify(this));
-
-    if ('password' in modelDict) {
-      delete modelDict['password'];
-    }
-
-    for (const [key, val] of Object.entries(modelDict)) {
-      if (val instanceof BaseModel) {
-        modelDict[key] = val.toDict();
-      } else if (Array.isArray(val)) {
-        modelDict[key] = val.map(model => (model instanceof BaseModel) ? model.toDict() : model);
-      }
-    }
-
-    return modelDict;
-  }
 }
 
 export class User extends BaseModel implements IUserProps {

@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { AuthServices } from "../../services/authServices";
+import AuthServices from "../../services/authServices";
 import { Unauthorized } from "./httpErrors";
 
-export function loadLoggedInUser(req: Request, res: Response, next: NextFunction): void {
+export async function loadLoggedInUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (req.session.userId) {
-    req.user = AuthServices.confirmUserId(req.session.userId);
+    req.user = await AuthServices.confirmUserId(req.session.userId);
   }
 
   next();
