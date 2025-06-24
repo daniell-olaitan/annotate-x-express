@@ -10,6 +10,7 @@
     "dev": "DEBUG=express:* tsx watch src/expressIndex.ts",
     "typecheck": "tsc --watch --noEmit",
     "build": "tsc",
+    "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
