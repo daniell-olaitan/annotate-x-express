@@ -94,6 +94,8 @@ Annotations are exported in the widely-used **COCO format**, compatible with man
 npm run dev
 ```
 
+Then visit `http://localhost:3000` in your browser.
+
 ## ✅ License
 
 This project is open-source under the MIT License.
